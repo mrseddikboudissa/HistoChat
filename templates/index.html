@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chatbot</title>
+    <title>HistoChat</title>
     <meta name="author" content="J.C. Chen">
     <!-- <link rel="stylesheet" href="css/style.css" /> -->
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
@@ -24,18 +24,31 @@
     <main>  
       <div class="chatbot">
         <div class="chat-header">
-          <h1>My LLM</h1>
+          <h1>hello </h1>
         </div>
-        <div class="header-sub-text">
-          <p>Seddik's Chatbot <a class="purple">❤</a></p>
-        </div>
+       
 
         <div class="spacer" id="messages-container"></div>
         
         <form class="chat-form" id="message-form">
+                    <!-- Image Upload -->
+         <label for="imageUpload" class="upload-btn"> 📷</label>
+        <input type="file" id="imageUpload" accept="image/*" hidden>
+
+
           <textarea type="text" id="message-input" placeholder="Send a message..."></textarea>
           <button type="submit">➤</button> 
+         
+         
         </form>
+
+
+
+  <!-- Preview -->
+<div class="image-preview" id="previewContainer">
+  <img id="previewImage" src="" alt="Preview">
+  <button class="remove-image-btn" id="removeImageBtn">✕</button>
+</div>
       </div>
     </main>
     <!--end chatbot container-->

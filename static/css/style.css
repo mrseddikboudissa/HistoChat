@@ -121,13 +121,34 @@ option:hover {
   color: #fff;
 }
 
+/* Upload Button */
+.upload-btn {
+  background-color: #7B58E5;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1.2em;
+  min-width: 4em;
+  max-width: 4em;
+  max-height: 2.4em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background-color 0.3s ease;
+}
+
+.upload-btn:hover {
+  background-color: #6244cc;
+}
 
 .chat-form {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  }
+  gap: 8px;      
+}
 
 .chat-form textarea[type="text"] {
   flex-grow: 1;
@@ -220,6 +241,19 @@ option:hover {
   border-radius: 50%;
 }
 
+.uploaded-image {
+  width: 200px !important;
+  height: auto !important;
+  border-radius: 10px !important;
+  border: 2px solid #7B58E5;
+  display: block;
+  float: right;
+  clear: both;
+  margin: 6px 10px;
+  object-fit: cover;
+}
+
+
 .error img {
   float: left; /* float the image to the left */
   margin-right: 10px; /* add some space between image and paragraph */
@@ -294,6 +328,10 @@ option:hover {
   clear: both;
 }
 
+
+
+
+
 .loading-animation {
   float: left; /* float the image to the left */
   margin-right: 10px; /* add some space between image and paragraph */
@@ -359,3 +397,42 @@ option:hover {
   }
 }
 
+/* Image preview staging area above input */
+.image-preview { /*the container is hidden by default when no image is selected we gonna use JS to add active 
+  class when the image is selected*/
+
+  display: none;
+  padding: 8px 12px;
+  background-color: #e0e0e1;
+  border-top: 1px solid #ccc;
+  position: relative;
+}
+
+.image-preview img {
+  max-width: 80px;
+  max-height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid #7B58E5;
+}
+
+.image-preview.active {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+.remove-image-btn {
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 20px;
+  text-align: center;
+  padding: 0;
+}

@@ -7,9 +7,20 @@ const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
 //
 
+// Get the image-related elements
+const imageupload =document.getElementById('imageUpload');
+const previewContained = document.getElementById('previewContainer');
+const previewimage = document.getElementById('previewImage');
+const removeImageBtn = document.getElementById('removeImageBtn');
+
 //Section: function to creat the dialogue window
-const addMessage = (message, role, imgSrc) => {
-  // creat elements in the dialogue window
+const addMessage = (message, role, imgSrc , uploadedImage=null) => { //This is the function that renders a message bubble in the chat.
+//  It takes 3 things — the text, the role (user/aibot/error), 
+// and an avatar image path and the uploaded image.
+//  It creates the div, adds the avatar and text, and appends it to the chat container.
+  
+// creat elements in the dialogue window
+// here we are creating extra html elements using JavaScript to build the structure of the message bubble. We create a div for the message, a paragraph for the text, and an img for the avatar. We set the class of the message div based on the role (user/aibot/error) to style it differently. We also set the source of the avatar image to the provided imgSrc.
   const messageElement = document.createElement('div');
   const textElement = document.createElement('p');
   messageElement.className = `message ${role}`;
@@ -17,6 +28,20 @@ const addMessage = (message, role, imgSrc) => {
   imgElement.src = `${imgSrc}`;
   // append the image and message to the message element
   messageElement.appendChild(imgElement);
+
+
+  if (uploadedImage) {
+    const uploadedImgElement = document.createElement('img');
+
+    uploadedImgElement.src = uploadedImage;
+    uploadedImgElement.className = 'uploaded-image';
+    messageElement.appendChild(uploadedImgElement);
+      // Force text to appear below the image
+  const clearDiv = document.createElement('div');
+  clearDiv.style.clear = 'both';
+  messageElement.appendChild(clearDiv);
+  }
+
   textElement.innerText = message;
   messageElement.appendChild(textElement);
   messagesContainer.appendChild(messageElement);
@@ -29,9 +54,29 @@ const addMessage = (message, role, imgSrc) => {
 
 
 //Section: Calling the model
-const sendMessage = async (message) => {
+const sendMessage = async (message) => {  // this does 4 things : 
+
+//shows the user's message, 
+// shows the loading animation, 
+// sends the text to Flask via fetch(), 
+// then removes the loading animation 
+// and shows the bot's response.
+
+   const imagefile = imageupload.files[0]; // we get the selected image file from the file input element. This is the image that the 
+   let imagedataurl = null; // we initialize a variable to store the data URL of the image. A data URL is a way to represent the image as a string that can be used as the source of an img element. 
+
+   if (imagefile){
+    imagedataurl = previewImage.src; // we create a FileReader object to read the contents of the image file.
+   }
+
   // addMessage(message, 'user','user.jpeg');
-  addMessage(message, 'user','../static/user.jpeg');
+  addMessage(message, 'user', '../static/profile.png', imagedataurl);
+   
+    // Clear the image preview after sending
+  imageUpload.value = '';
+  previewImage.src = '';
+  previewContainer.classList.remove('active');
+
   // Loading animation
   const loadingElement = document.createElement('div');
   const loadingtextElement = document.createElement('p');
@@ -41,22 +86,38 @@ const sendMessage = async (message) => {
   messagesContainer.appendChild(loadingElement);
   messagesContainer.appendChild(loadingtextElement);
 
-  async function makePostRequest(msg) {
+
+
+//We need to use FormData instead, which can carry both text and files together.
+
+
+  async function makePostRequest(msg,imageFile) {
     const url = 'http://127.0.0.1:5000/chatbot';  // Make a POST request to this url
-    const requestBody = {
-      prompt: msg
-    };
+
+
+    const formData = new FormData(); // Create a new FormData object to hold the data we want to send to the backend. FormData is a special type of object that can hold both text and files, making it ideal for our use case where we want to send a message along with an optional image.
+    formData.append('prompt',msg); // We append the message text to the FormData object with the key 'prompt'. This is how we include the user's message in the data we send to the backend.
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
   
     try {
+      
+      
+      //🟢 STEP 2 — Send request to backend
+      //fetch() = HTTP request to backend and wait for the response
+
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
+      // No 'Content-Type' header here — browser sets it automatically for FormData
+
+        body:formData
       });
-  
-      const data = await response.text();
+      
+//🟡 STEP 10 — Frontend receives response
+
+const data = await response.text(); //Here we wait for the answer from the backend and we store it in the variable data
       // Handle the response data here
       console.log(data);
       return data;
@@ -67,7 +128,9 @@ const sendMessage = async (message) => {
     }
   }
   
-  var res = await makePostRequest(message);
+
+
+  var res = await makePostRequest(message,imagefile);
   
   data = {"response": res};
   
@@ -86,6 +149,8 @@ const sendMessage = async (message) => {
     // Process the normal response here
     const responseMessage = data['response'];
     // addMessage(responseMessage, 'aibot','Bot_logo.png');
+
+    //👉 🟡STEP 11 Displays message in UI
     addMessage(responseMessage, 'aibot','../static/Bot_logo.png');
   }
   
@@ -95,11 +160,44 @@ const sendMessage = async (message) => {
 //
 
 //Section: Button to submit to the model and get the response
+
+// User writes a message (Frontend)
+ //🟢 STEP 1 — Write the message
 messageForm.addEventListener('submit', async (event) => {
+
+  
   event.preventDefault();
   const message = messageInput.value.trim();
-  if (message !== '') {
+
+
+  if (message !=='' || imageupload.files.length > 0) { // we check if the message is not empty or if there is an image selected. This ensures that we only send a request to the backend if there is something to send (either text or an image).
     messageInput.value = '';
+  
+
+    //🟢 STEP 2 — Send request to backend
     await sendMessage(message);
+  
   }
 });
+
+
+imageupload.addEventListener('change',() => { // the change happens when the user selects an image from their device. We read that image and display it in the preview container.
+ const file = imageupload.files[0]; //The <input type="file"> stores files inside: it an array that why we use [0] to get the first file. 
+ if(file){
+  const reader = new FileReader(); //FileReader is a built-in JavaScript class that allows us to read the contents of files (like images) on the client side. We create an instance of it to read the selected image file.
+  //JavaScript cannot directly access local files for security.Instead we use FileReader to safely read the file.
+
+  reader.onload = (e) => { //on load means when file finishes loading into the reader, we execute this function. The event object e contains the result of reading the file.
+    previewimage.src = e.target.result;
+    previewContained.classList.add('active'); // he we add active class of css to preview the image 
+  };
+  reader.readAsDataURL(file);
+  }});
+
+  removeImageBtn.addEventListener('click',() => { // this is the function that removes the previewed image when the user clicks the remove button.
+
+    imageupload.value = ''; // we clear the file input so that it no longer holds the selected image.
+    previewimage.src = ''; // we clear the src of the preview image to remove it from view.
+    previewContained.classList.remove('active'); // we remove the active class to hide the preview container again.
+
+  });
