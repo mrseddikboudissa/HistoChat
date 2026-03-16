@@ -36,3 +36,7 @@ The project is designed so that general-purpose models can be swapped for domain
 
 ### ML framework
 **PyTorch, HuggingFace Transformers, Accelerate**
+
+
+![HistoChat Pipeline](pipeline.svg)
+
