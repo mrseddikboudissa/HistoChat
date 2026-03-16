@@ -13,6 +13,13 @@ const previewContained = document.getElementById('previewContainer');
 const previewimage = document.getElementById('previewImage');
 const removeImageBtn = document.getElementById('removeImageBtn');
 
+// Get the document-related elements
+const documentupload = document.getElementById('documentUpload');
+const pdfStatusMessage = document.createElement('div');
+pdfStatusMessage.id = 'pdf-status';
+messagesContainer.appendChild(pdfStatusMessage);
+
+
 //Section: function to creat the dialogue window
 const addMessage = (message, role, imgSrc , uploadedImage=null) => { //This is the function that renders a message bubble in the chat.
 //  It takes 3 things — the text, the role (user/aibot/error), 
@@ -91,7 +98,7 @@ const sendMessage = async (message) => {  // this does 4 things :
 //We need to use FormData instead, which can carry both text and files together.
 
 
-  async function makePostRequest(msg,imageFile) {
+async function makePostRequest(msg,imageFile) {
     const url = 'http://127.0.0.1:5000/chatbot';  // Make a POST request to this url
 
 
@@ -168,14 +175,21 @@ messageForm.addEventListener('submit', async (event) => {
   
   event.preventDefault();
   const message = messageInput.value.trim();
-
+  const hasImage = imageUpload.files[0];
+  const hasPdf = documentupload.files[0];
 
   if (message !=='' || imageupload.files.length > 0) { // we check if the message is not empty or if there is an image selected. This ensures that we only send a request to the backend if there is something to send (either text or an image).
     messageInput.value = '';
   
+          // If a PDF has been uploaded, use RAG mode
+        if (hasPdf && message !== '') {
+            console.log("Sending message with PDF...");
+            await sendMessageWithPdf(message);
+        } else {
+            console.log("Sending message without PDF...");
+            await sendMessage(message);
+        }
 
-    //🟢 STEP 2 — Send request to backend
-    await sendMessage(message);
   
   }
 });
@@ -201,3 +215,69 @@ imageupload.addEventListener('change',() => { // the change happens when the use
     previewContained.classList.remove('active'); // we remove the active class to hide the preview container again.
 
   });
+
+
+
+
+documentupload.addEventListener('change', async () => {
+    const file = documentupload.files[0];
+    if (!file) return;
+
+    // Show processing message in chat
+    addMessage(`Uploading document: ${file.name}...`, 'aibot', '../static/Bot_logo.png');
+
+    const formData = new FormData();
+    formData.append('pdf', file);
+
+    try {
+        const response = await fetch('http://127.0.0.1:5000/upload_pdf', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.text();
+        addMessage(result, 'aibot', '../static/Bot_logo.png');
+
+    } catch (error) {
+        addMessage('Error uploading document. Please try again.', 'error', '../static/Error.png');
+        console.error('PDF upload error:', error);
+    }
+});
+
+
+const sendMessageWithPdf = async (message) => {
+    addMessage(message, 'user', '../static/profile.png');
+    
+    // Show loading animation
+    const loadingElement = document.createElement('div');
+    const loadingTextElement = document.createElement('p');
+    loadingElement.className = 'loading-animation';
+    loadingTextElement.className = 'loading-text';
+    loadingTextElement.innerText = 'Searching document...';
+    messagesContainer.appendChild(loadingElement);
+    messagesContainer.appendChild(loadingTextElement);
+
+    try {
+        const formData = new FormData();
+        formData.append('prompt', message);
+
+        const response = await fetch('http://127.0.0.1:5000/ask_pdf', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.text();
+
+        // Remove loading animation
+        loadingElement.remove();
+        loadingTextElement.remove();
+
+        addMessage(data, 'aibot', '../static/Bot_logo.png');
+
+    } catch (error) {
+        loadingElement.remove();
+        loadingTextElement.remove();
+        addMessage('Error querying document.', 'error', '../static/Error.png');
+        console.error('PDF query error:', error);
+    }
+};
