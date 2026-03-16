@@ -1,7 +1,7 @@
 from flask import Flask, request, render_template
 from flask_cors import CORS
 from chat import chat_with_mistral
-from imagecaptions import answer_image_question
+from vision import answer_image_question
 from pdfreader import process_document, answer_document_question
 
 app = Flask(__name__)

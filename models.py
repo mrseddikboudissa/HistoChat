@@ -8,7 +8,7 @@ from transformers import pipeline
 
 set_seed(42)
 
-
+"""
 print("Loading BLIP-2...")
 # Load BLIP-2 captioning model
 blip_processor = Blip2Processor.from_pretrained("Salesforce/blip2-opt-6.7b")
@@ -17,7 +17,7 @@ blip_model = Blip2ForConditionalGeneration.from_pretrained(
     torch_dtype=torch.float16
 )
 blip_model = blip_model.to("cuda" if torch.cuda.is_available() else "cpu")
-print("BLIP-2 loaded!")
+print("BLIP-2 loaded!")"""
 
 
 print("Loading Mistral...")
